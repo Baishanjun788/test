@@ -1,0 +1,21 @@
+services:
+  xiaohao:
+    build: .
+    container_name: xiaohao
+    restart: unless-stopped
+    ports:
+      # 左边是宿主机端口，想改成 80 就写 "80:8787"
+      - "8787:8787"
+    environment:
+      PORT: 8787
+      HOST: 0.0.0.0
+      # 上游接口，一般不用改
+      UPSTREAM: https://api.4399pc.cc/claim_by_key
+      # 两个 API Key
+      API_KEY_1: aku_6648b8a4a0204d6168e180086b206ac47d96a29e
+      API_KEY_2: aku_b625effc303427b2e8ae1dd817756ad38717f639
+      # 访问口令：公网部署强烈建议改成你自己的随机串，留空则无需口令
+      ACCESS_TOKEN: ""
+      # 每 IP 每 60 秒最多 10 次
+      LIMIT_WINDOW_MS: 60000
+      LIMIT_MAX: 10

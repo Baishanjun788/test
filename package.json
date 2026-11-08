@@ -1,0 +1,15 @@
+{
+  "name": "xiaohao-server",
+  "version": "1.0.0",
+  "description": "小号获取网页 + 服务端转发（解决 CORS 限制）",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {}
+}
