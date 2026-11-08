@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小号获取</title>
+<style>
+  :root {
+    --bg-1: #0f1220;
+    --bg-2: #171a2e;
+    --card: rgba(255, 255, 255, 0.06);
+    --card-border: rgba(255, 255, 255, 0.12);
+    --text: #eef1ff;
+    --muted: #9aa3c7;
+    --accent: #6d5efc;
+    --accent-2: #22d3ee;
+    --ok: #34d399;
+    --err: #fb7185;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { height: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100%;
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    background: radial-gradient(circle at 15% 10%, #262a4d 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, #1e3a4d 0%, transparent 45%),
+                linear-gradient(160deg, var(--bg-1), var(--bg-2));
+    background-attachment: fixed;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 28px 16px 56px;
+  }
+
+  .wrap { width: 100%; max-width: 560px; }
+
+  .card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 22px;
+    padding: 30px 28px 26px;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: -2px -2px auto -2px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent));
+    background-size: 200% 100%;
+    animation: slide 6s linear infinite;
+  }
+
+  @keyframes slide {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .title {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--accent-2);
+    box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15), 0 0 14px var(--accent-2);
+  }
+
+  .remain {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 14px;
+    background: rgba(109, 94, 252, 0.16);
+    border: 1px solid rgba(109, 94, 252, 0.35);
+    white-space: nowrap;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .remain .num {
+    font-size: 22px;
+    font-weight: 800;
+    color: #c7c0ff;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .remain .lbl { font-size: 12px; color: var(--muted); }
+  .remain.low .num { color: var(--err); }
+
+  /* ---------- API 切换 ---------- */
+
+  .api-switch {
+    display: flex;
+    gap: 8px;
+    padding: 5px;
+    margin-bottom: 20px;
+    background: rgba(8, 10, 22, 0.5);
+    border: 1px solid var(--card-border);
+    border-radius: 15px;
+  }
+
+  .api-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 8px;
+    border: none;
+    border-radius: 11px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  }
+
+  .api-btn:hover { color: var(--text); }
+
+  .api-btn.active {
+    color: #fff;
+    background: linear-gradient(120deg, var(--accent), #8b5cf6);
+    box-shadow: 0 6px 18px rgba(109, 94, 252, 0.4);
+  }
+
+  .api-tip {
+    margin: -12px 0 16px;
+    font-size: 11.5px;
+    color: #6b7398;
+    font-family: "Consolas", ui-monospace, monospace;
+    text-align: center;
+  }
+
+  /* ---------- 表单 ---------- */
+
+  .field { margin-bottom: 14px; }
+
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 7px;
+    letter-spacing: 0.6px;
+  }
+
+  .row { display: flex; gap: 9px; }
+
+  input[type="text"], input[type="password"] {
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    padding: 0 15px;
+    font-size: 15.5px;
+    font-family: "Consolas", "Cascadia Mono", ui-monospace, monospace;
+    letter-spacing: 0.4px;
+    color: var(--text);
+    background: rgba(8, 10, 22, 0.55);
+    border: 1px solid var(--card-border);
+    border-radius: 13px;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+  }
+
+  input::placeholder { color: #5b6486; }
+
+  input:focus {
+    border-color: rgba(109, 94, 252, 0.75);
+    background: rgba(8, 10, 22, 0.75);
+    box-shadow: 0 0 0 3px rgba(109, 94, 252, 0.18);
+  }
+
+  input.flash {
+    border-color: rgba(34, 211, 238, 0.9) !important;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.22) !important;
+  }
+
+  .copy {
+    flex: 0 0 52px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.18s, transform 0.12s, border-color 0.18s, color 0.18s;
+  }
+
+  .copy:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255,255,255,0.25); }
+  .copy:active { transform: scale(0.94); }
+  .copy.done { color: var(--ok); border-color: rgba(52, 211, 153, 0.6); background: rgba(52, 211, 153, 0.14); }
+  .copy svg { width: 19px; height: 19px; }
+
+  .btn {
+    width: 100%;
+    height: 52px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+    cursor: pointer;
+    background: linear-gradient(120deg, var(--accent), #8b5cf6 45%, var(--accent-2));
+    background-size: 180% 100%;
+    box-shadow: 0 12px 28px rgba(109, 94, 252, 0.35);
+    transition: background-position 0.5s, transform 0.12s, filter 0.18s, box-shadow 0.18s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: inherit;
+  }
+
+  .btn:hover:not(:disabled) { background-position: 100% 50%; box-shadow: 0 14px 34px rgba(109, 94, 252, 0.5); }
+  .btn:active:not(:disabled) { transform: scale(0.985); }
+
+  .btn:disabled {
+    cursor: not-allowed;
+    filter: grayscale(0.35) brightness(0.8);
+    box-shadow: none;
+  }
+
+  .spinner {
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    border: 2.5px solid rgba(255, 255, 255, 0.32);
+    border-top-color: #fff;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .status {
+    margin-top: 14px;
+    min-height: 20px;
+    font-size: 13px;
+    text-align: center;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+
+  .status.ok { color: var(--ok); }
+  .status.err { color: var(--err); }
+
+  .foot {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #6b7398;
+    font-family: "Consolas", ui-monospace, monospace;
+  }
+
+  .foot span span { color: #a9b1d6; }
+
+  /* ---------- 口令 ---------- */
+
+  .token-box {
+    margin-bottom: 18px;
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(251, 191, 36, 0.09);
+    border: 1px solid rgba(251, 191, 36, 0.32);
+    display: none;
+  }
+
+  .token-box.show { display: block; }
+
+  .token-box .tip {
+    font-size: 12px;
+    color: #fbbf24;
+    margin-bottom: 9px;
+  }
+
+  .token-row { display: flex; gap: 9px; }
+
+  .token-row input { height: 42px; }
+
+  /* ---------- 历史记录 ---------- */
+
+  .history {
+    margin-top: 18px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 20px 22px 14px;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .hist-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .hist-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .hist-count {
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 20px;
+    background: rgba(109, 94, 252, 0.22);
+    color: #c7c0ff;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mini {
+    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--muted);
+    font-size: 12px;
+    font-family: inherit;
+    padding: 7px 13px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
+  }
+
+  .mini:hover { background: rgba(255, 255, 255, 0.13); color: var(--text); }
+  .mini.danger:hover { color: var(--err); border-color: rgba(251, 113, 133, 0.55); background: rgba(251, 113, 133, 0.12); }
+
+  .hist-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-right: -4px;
+  }
+
+  .hist-list::-webkit-scrollbar { width: 6px; }
+  .hist-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 6px; }
+
+  .hist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 13px;
+    background: rgba(8, 10, 22, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    animation: fadeIn 0.28s ease both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .hist-item:hover { border-color: rgba(255, 255, 255, 0.16); }
+
+  .hist-main { flex: 1; min-width: 0; }
+
+  .hist-top {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 3px;
+    flex-wrap: wrap;
+  }
+
+  .hist-user {
+    font-family: "Consolas", ui-monospace, monospace;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #dfe3ff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hist-pass {
+    font-family: "Consolas", ui-monospace, monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tag {
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .tag.api1 { background: rgba(109, 94, 252, 0.2); color: #b3a9ff; border: 1px solid rgba(109, 94, 252, 0.35); }
+  .tag.api2 { background: rgba(34, 211, 238, 0.16); color: #7ee7f7; border: 1px solid rgba(34, 211, 238, 0.32); }
+
+  .hist-time {
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: #6b7398;
+    font-family: "Consolas", ui-monospace, monospace;
+    text-align: right;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+
+  .hist-acts {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 0 0 auto;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.16s, color 0.16s, border-color 0.16s;
+    padding: 0;
+  }
+
+  .icon-btn:hover { background: rgba(255, 255, 255, 0.14); color: var(--text); }
+  .icon-btn.del:hover { color: var(--err); border-color: rgba(251, 113, 133, 0.5); background: rgba(251, 113, 133, 0.12); }
+  .icon-btn svg { width: 14px; height: 14px; }
+
+  .empty {
+    padding: 26px 0 30px;
+    text-align: center;
+    font-size: 13px;
+    color: #5b6486;
+  }
+
+  /* ---------- Toast ---------- */
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 34px;
+    transform: translate(-50%, 24px);
+    padding: 11px 22px;
+    border-radius: 12px;
+    background: rgba(20, 24, 42, 0.95);
+    border: 1px solid rgba(52, 211, 153, 0.45);
+    color: var(--ok);
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s, transform 0.22s;
+    z-index: 99;
+    max-width: 88vw;
+    text-align: center;
+  }
+
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.bad { border-color: rgba(251, 113, 133, 0.5); color: var(--err); }
+
+  @media (max-width: 480px) {
+    body { padding: 18px 12px 40px; }
+    .card { padding: 24px 18px 20px; border-radius: 18px; }
+    .title { font-size: 18px; }
+    .remain .num { font-size: 19px; }
+    .history { padding: 16px 14px 10px; border-radius: 16px; }
+    .api-btn { font-size: 12px; padding: 10px 4px; }
+    .hist-time { font-size: 10px; }
+    .hist-acts { flex-direction: row; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="head">
+        <div class="title"><span class="dot"></span>小号获取</div>
+        <div class="remain" id="remainBox">
+          <span class="num" id="remainNum">--</span>
+          <span class="lbl">剩余次数</span>
+        </div>
+      </div>
+
+      <div class="token-box" id="tokenBox">
+        <div class="tip">本站需要访问口令，请输入管理员提供的口令</div>
+        <div class="token-row">
+          <input type="password" id="tokenInput" placeholder="访问口令" spellcheck="false">
+          <button class="mini" id="tokenSave">保存</button>
+        </div>
+      </div>
+
+      <div class="api-switch" id="apiSwitch">
+        <button class="api-btn active" data-api="api1">API 1 - baishanjun</button>
+        <button class="api-btn" data-api="api2">API 2 - chenxx</button>
+      </div>
+      <div class="api-tip" id="apiTip"></div>
+
+      <div class="field">
+        <label>账号</label>
+        <div class="row">
+          <input type="text" id="username" placeholder="点击下方按钮获取" readonly spellcheck="false">
+          <button class="copy" id="copyUser" title="复制账号" aria-label="复制账号">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="12" height="12" rx="2.5"/>
+              <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>密码</label>
+        <div class="row">
+          <input type="text" id="password" placeholder="点击下方按钮获取" readonly spellcheck="false">
+          <button class="copy" id="copyPass" title="复制密码" aria-label="复制密码">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="12" height="12" rx="2.5"/>
+              <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn" id="claimBtn">
+        <span class="spinner" id="spinner"></span>
+        <span id="btnText">获取小号</span>
+      </button>
+
+      <div class="status" id="status">准备就绪</div>
+
+      <div class="foot">
+        <span>已用 <span id="usedNum">--</span></span>
+        <span>额度 <span id="limitNum">--</span></span>
+      </div>
+    </div>
+
+    <div class="history">
+      <div class="hist-head">
+        <div class="hist-title">
+          历史获取
+          <span class="hist-count" id="histCount">0</span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="mini" id="copyAllBtn">复制全部</button>
+          <button class="mini danger" id="clearBtn">清空</button>
+        </div>
+      </div>
+      <div class="hist-list" id="histList"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">已复制</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ------------------------------------------------------------------
+   * 部署配置
+   * 同域部署时 CLAIM_ENDPOINT 保持相对路径即可，无需修改。
+   * 若前端与转发服务不在同一个域名，填上服务的完整地址，例如：
+   *   var CLAIM_ENDPOINT = "https://api.your-domain.com/api/claim";
+   * ------------------------------------------------------------------ */
+  var CLAIM_ENDPOINT = "api/claim";
+
+  var APP_TITLE = "小号获取";
+  var COOLDOWN = 3000;
+  var STORE_KEY = "xiaohao_history_v1";
+  var API_KEY_STORE = "xiaohao_api_v1";
+  var TOKEN_STORE = "xiaohao_token_v1";
+  var MAX_HISTORY = 200;
+
+  var APIS = {
+    api1: { label: "baishanjun", tag: "API 1" },
+    api2: { label: "chenxx",     tag: "API 2" }
+  };
+
+  var currentApi = "api1";
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var elUser    = $("username");
+  var elPass    = $("password");
+  var elBtn     = $("claimBtn");
+  var elBtnText = $("btnText");
+  var elSpinner = $("spinner");
+  var elStatus  = $("status");
+  var elRemain  = $("remainNum");
+  var elRemainBox = $("remainBox");
+  var elUsed    = $("usedNum");
+  var elLimit   = $("limitNum");
+  var elToast   = $("toast");
+  var elList    = $("histList");
+  var elCount   = $("histCount");
+  var elApiTip  = $("apiTip");
+  var elTokenBox = $("tokenBox");
+  var elTokenInput = $("tokenInput");
+
+  var loading = false;
+  var cooling = false;
+  var cooldownTimer = null;
+  var toastTimer = null;
+  var history = [];
+
+  /* ---------- 本地存储 ---------- */
+
+  function lsGet(k, d) {
+    try {
+      var v = localStorage.getItem(k);
+      return v === null ? d : v;
+    } catch (e) { return d; }
+  }
+
+  function lsSet(k, v) {
+    try { localStorage.setItem(k, v); return true; } catch (e) { return false; }
+  }
+
+  function loadHistory() {
+    try {
+      var arr = JSON.parse(lsGet(STORE_KEY, "[]"));
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+
+  function saveHistory() {
+    if (!lsSet(STORE_KEY, JSON.stringify(history))) {
+      showToast("本地保存失败（存储已满或禁用）", true);
+    }
+  }
+
+  function getToken() { return lsGet(TOKEN_STORE, ""); }
+  function setToken(v) { lsSet(TOKEN_STORE, v); }
+
+  /* ---------- 工具 ---------- */
+
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+
+  function formatTime(ts) {
+    var d = new Date(ts);
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
+      " " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  }
+
+  function formatShort(ts) {
+    var d = new Date(ts);
+    return pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
+      " " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  }
+
+  function setStatus(msg, type) {
+    elStatus.textContent = msg;
+    elStatus.className = "status" + (type ? " " + type : "");
+  }
+
+  function showToast(msg, bad) {
+    elToast.textContent = msg;
+    elToast.className = "toast show" + (bad ? " bad" : "");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      elToast.className = "toast" + (bad ? " bad" : "");
+    }, 1600);
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function syncBtn() {
+    elBtn.disabled = loading || cooling;
+    elSpinner.style.display = loading ? "block" : "none";
+    if (loading) elBtnText.textContent = "获取中…";
+    else if (!cooling) elBtnText.textContent = "获取小号";
+  }
+
+  function startCooldown() {
+    cooling = true;
+    syncBtn();
+
+    var end = Date.now() + COOLDOWN;
+    elBtnText.textContent = "冷却中 " + (COOLDOWN / 1000).toFixed(1) + "s";
+
+    clearInterval(cooldownTimer);
+    cooldownTimer = setInterval(function () {
+      var ms = end - Date.now();
+      if (ms <= 0) {
+        clearInterval(cooldownTimer);
+        cooldownTimer = null;
+        cooling = false;
+        syncBtn();
+        return;
+      }
+      elBtnText.textContent = "冷却中 " + (ms / 1000).toFixed(1) + "s";
+    }, 50);
+  }
+
+  function updateQuota(data) {
+    var remaining = data && data.remaining;
+    var used = data && data.used_count;
+    var limit = data && data.quota_limit;
+
+    if (typeof remaining === "number") {
+      elRemain.textContent = remaining;
+      elRemainBox.classList.toggle("low", remaining <= 3);
+    } else if (typeof used === "number" && typeof limit === "number") {
+      var r = Math.max(limit - used, 0);
+      elRemain.textContent = r;
+      elRemainBox.classList.toggle("low", r <= 3);
+    } else {
+      elRemain.textContent = "--";
+      elRemainBox.classList.remove("low");
+    }
+
+    elUsed.textContent  = (typeof used === "number")  ? used  : "--";
+    elLimit.textContent = (typeof limit === "number") ? limit : "--";
+  }
+
+  /* ---------- 复制 ---------- */
+
+  function fallbackCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "-1000px";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  function copyText(text, label, btn) {
+    if (!text) { showToast("没有可复制的" + label, true); return; }
+
+    var done = function () {
+      showToast("已复制" + label);
+      if (btn) {
+        btn.classList.add("done");
+        setTimeout(function () { btn.classList.remove("done"); }, 900);
+      }
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done).catch(function () {
+        if (fallbackCopy(text)) done();
+        else showToast("复制失败，请手动选中复制", true);
+      });
+    } else {
+      if (fallbackCopy(text)) done();
+      else showToast("复制失败，请手动选中复制", true);
+    }
+  }
+
+  /* ---------- 当前账号 ---------- */
+
+  function setCurrentAccount(acct) {
+    elUser.value = acct ? acct.username : "";
+    elPass.value = acct ? acct.password : "";
+  }
+
+  function flashInputs() {
+    elUser.classList.add("flash");
+    elPass.classList.add("flash");
+    setTimeout(function () {
+      elUser.classList.remove("flash");
+      elPass.classList.remove("flash");
+    }, 700);
+  }
+
+  /* ---------- 历史渲染 ---------- */
+
+  function renderHistory() {
+    elCount.textContent = history.length;
+
+    if (!history.length) {
+      elList.innerHTML = '<div class="empty">还没有获取记录，点上面的按钮获取一次吧</div>';
+      return;
+    }
+
+    var html = "";
+    for (var i = 0; i < history.length; i++) {
+      var h = history[i];
+      var api = APIS[h.api] || APIS.api1;
+      var cls = h.api === "api2" ? "api2" : "api1";
+      html += ''
+        + '<div class="hist-item" data-id="' + escapeHtml(h.id) + '">'
+        + '  <div class="hist-main">'
+        + '    <div class="hist-top">'
+        + '      <span class="hist-user" title="' + escapeHtml(h.username) + '">' + escapeHtml(h.username) + '</span>'
+        + '      <span class="tag ' + cls + '">' + escapeHtml(api.tag) + '</span>'
+        + '    </div>'
+        + '    <div class="hist-pass" title="' + escapeHtml(h.password) + '">密码：' + escapeHtml(h.password) + '</div>'
+        + '  </div>'
+        + '  <div class="hist-time">' + escapeHtml(formatShort(h.time)) + '</div>'
+        + '  <div class="hist-acts">'
+        + '    <button class="icon-btn" data-act="copy" title="复制账号+密码">'
+        + '      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        + '        <rect x="9" y="9" width="12" height="12" rx="2.5"/>'
+        + '        <path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5"/>'
+        + '      </svg>'
+        + '    </button>'
+        + '    <button class="icon-btn" data-act="use" title="填回上方输入框">'
+        + '      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        + '        <path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>'
+        + '      </svg>'
+        + '    </button>'
+        + '    <button class="icon-btn del" data-act="del" title="删除这条">'
+        + '      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        + '        <path d="M3 6h18"/><path d="M8 6V4h8v2"/>'
+        + '        <path d="M6 6l1 14h10l1-14"/>'
+        + '      </svg>'
+        + '    </button>'
+        + '  </div>'
+        + '</div>';
+    }
+    elList.innerHTML = html;
+  }
+
+  function pushHistory(acct) {
+    history.unshift(acct);
+    if (history.length > MAX_HISTORY) history = history.slice(0, MAX_HISTORY);
+    saveHistory();
+    renderHistory();
+  }
+
+  function findRecord(id) {
+    for (var i = 0; i < history.length; i++) {
+      if (history[i].id === id) return history[i];
+    }
+    return null;
+  }
+
+  elList.addEventListener("click", function (e) {
+    var btn = e.target.closest("button[data-act]");
+    if (!btn) return;
+    var item = e.target.closest(".hist-item");
+    if (!item) return;
+    var rec = findRecord(item.getAttribute("data-id"));
+    if (!rec) return;
+
+    var act = btn.getAttribute("data-act");
+
+    if (act === "copy") {
+      copyText(rec.username + " " + rec.password, "账号和密码", btn);
+    } else if (act === "use") {
+      setCurrentAccount(rec);
+      flashInputs();
+      setStatus("已填入该条记录的账号", "ok");
+      showToast("已填入");
+    } else if (act === "del") {
+      history = history.filter(function (x) { return x.id !== rec.id; });
+      saveHistory();
+      renderHistory();
+      showToast("已删除该条记录");
+    }
+  });
+
+  /* ---------- API 切换 ---------- */
+
+  function applyApi(id) {
+    if (!APIS[id]) return;
+    currentApi = id;
+    lsSet(API_KEY_STORE, id);
+
+    var btns = document.querySelectorAll(".api-btn");
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].classList.toggle("active", btns[i].getAttribute("data-api") === id);
+    }
+
+    elApiTip.textContent = "当前：" + APIS[id].tag + " · " + APIS[id].label;
+    setCurrentAccount(null);
+    updateQuota(null);
+    setStatus("已切换到 " + APIS[id].tag + " - " + APIS[id].label);
+  }
+
+  $("apiSwitch").addEventListener("click", function (e) {
+    var btn = e.target.closest(".api-btn");
+    if (!btn) return;
+    if (loading) { showToast("正在请求中，请稍候", true); return; }
+    var id = btn.getAttribute("data-api");
+    if (id === currentApi) return;
+    applyApi(id);
+    showToast("已切换到 " + APIS[id].tag + " - " + APIS[id].label);
+  });
+
+  /* ---------- 获取 ---------- */
+
+  var tokenRequired = false;
+
+  function showTokenBox(show) {
+    tokenRequired = show;
+    elTokenBox.classList.toggle("show", show);
+  }
+
+  function claim() {
+    if (loading || cooling) return;
+
+    var apiId = currentApi;
+    var apiConf = APIS[apiId];
+
+    loading = true;
+    syncBtn();
+    setStatus("正在请求 " + apiConf.tag + " - " + apiConf.label + " …");
+
+    var payload = JSON.stringify({ api: apiId, token: getToken() });
+
+    fetch(CLAIM_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Access-Token": getToken() },
+      body: payload
+    })
+      .then(function (res) {
+        return res.text().then(function (text) {
+          var body = null;
+          try { body = JSON.parse(text); } catch (e) { body = null; }
+          return { ok: res.ok, status: res.status, body: body };
+        });
+      })
+      .then(function (result) {
+        loading = false;
+        syncBtn();
+
+        var data = result.body;
+
+        // 需要口令
+        if (result.status === 401) {
+          showTokenBox(true);
+          setStatus("需要访问口令，请在下方输入后重试", "err");
+          showToast("请输入访问口令", true);
+          elTokenInput.focus();
+          return;
+        }
+
+        // 限速
+        if (result.status === 429) {
+          var wait = (data && data.msg) || "请求过于频繁";
+          setStatus(wait, "err");
+          showToast("请求过于频繁", true);
+          startCooldown();
+          return;
+        }
+
+        if (!data || typeof data !== "object") {
+          setStatus("服务返回内容无法解析（HTTP " + result.status + "）", "err");
+          showToast("返回无法解析", true);
+          startCooldown();
+          return;
+        }
+
+        if (data.code === 1 && data.username) {
+          var prevUser = elUser.value.trim();
+          var prevPass = elPass.value.trim();
+
+          if (prevUser && prevUser !== data.username) {
+            pushHistory({
+              id: String(Date.now()) + "_" + Math.random().toString(36).slice(2, 7),
+              username: prevUser,
+              password: prevPass,
+              api: apiId,
+              time: Date.now()
+            });
+          }
+
+          setCurrentAccount({ username: data.username, password: data.password || "" });
+          updateQuota(data);
+          setStatus("获取成功（" + apiConf.tag + "）", "ok");
+          showToast("获取成功");
+          startCooldown();
+        } else {
+          updateQuota(data);
+          var msg = data.msg || ("错误码 " + (data.code === undefined ? "?" : data.code));
+          setStatus("获取失败：" + msg, "err");
+          showToast("获取失败：" + msg, true);
+          startCooldown();
+        }
+      })
+      .catch(function (err) {
+        loading = false;
+        syncBtn();
+        startCooldown();
+        var m = err && err.message ? err.message : "";
+        if (m === "Failed to fetch") {
+          setStatus("无法连接转发服务，请确认服务已启动、地址正确", "err");
+          showToast("无法连接服务", true);
+        } else {
+          setStatus("请求出错：" + m, "err");
+          showToast("请求出错", true);
+        }
+      });
+  }
+
+  elBtn.addEventListener("click", claim);
+
+  elUser.addEventListener("click", function () { this.select(); });
+  elPass.addEventListener("click", function () { this.select(); });
+
+  $("copyUser").addEventListener("click", function () {
+    copyText(elUser.value.trim(), "账号", this);
+  });
+
+  $("copyPass").addEventListener("click", function () {
+    copyText(elPass.value.trim(), "密码", this);
+  });
+
+  $("copyAllBtn").addEventListener("click", function () {
+    if (!history.length) { showToast("还没有历史记录", true); return; }
+    var lines = history.map(function (h) {
+      return formatTime(h.time) + "  [" + APIS[h.api].tag + "]  " + h.username + "  " + h.password;
+    });
+    copyText(lines.join("\n"), "全部历史", this);
+  });
+
+  $("clearBtn").addEventListener("click", function () {
+    if (!history.length) { showToast("还没有历史记录", true); return; }
+    if (!confirm("确定清空全部 " + history.length + " 条历史记录吗？此操作不可恢复。")) return;
+    history = [];
+    saveHistory();
+    renderHistory();
+    showToast("已清空历史记录");
+  });
+
+  $("tokenSave").addEventListener("click", function () {
+    var v = elTokenInput.value.trim();
+    if (!v) { showToast("口令不能为空", true); return; }
+    setToken(v);
+    showToast("口令已保存");
+    claim();
+  });
+
+  elTokenInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") $("tokenSave").click();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") claim();
+  });
+
+  /* ---------- 初始化 ---------- */
+
+  var savedApi = lsGet(API_KEY_STORE, "api1");
+  applyApi(APIS[savedApi] ? savedApi : "api1");
+
+  history = loadHistory();
+  renderHistory();
+
+  if (history.length) {
+    setCurrentAccount(history[0]);
+    setStatus("已加载 " + history.length + " 条历史记录");
+  }
+
+  // 探测服务是否需要口令
+  fetch("healthz", { cache: "no-store" })
+    .then(function (r) { return r.json(); })
+    .then(function (info) {
+      if (info && info.tokenRequired) {
+        showTokenBox(!getToken());
+        if (!getToken()) setStatus("本站已开启访问口令，请先输入口令");
+      }
+    })
+    .catch(function () {
+      setStatus("无法连接转发服务，请确认服务已启动", "err");
+    });
+})();
+</script>
+</body>
+</html>
